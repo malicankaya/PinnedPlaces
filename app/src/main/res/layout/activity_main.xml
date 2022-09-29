@@ -13,6 +13,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:src="@drawable/ic_action_add_24"
-        android:contentDescription="@string/fab_add_place_description" />
+        android:contentDescription="@string/fab_add_place_description"
+        app:tint="@color/white"/>
 
 </FrameLayout>
