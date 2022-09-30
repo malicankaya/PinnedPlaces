@@ -5,10 +5,13 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
@@ -30,13 +33,15 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 Toast.makeText(this, "Permission denied for camera.", Toast.LENGTH_SHORT).show()
             }
         }
+    private var openCameraLauncher: ActivityResultLauncher<Intent>? = null
     private var readPermissions: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (!isGranted) {
-                Toast.makeText(this, "Permission denied for choose photo.", Toast.LENGTH_SHORT)
+                Toast.makeText(this, "Permission denied for choosing photo.", Toast.LENGTH_SHORT)
                     .show()
             }
         }
+    private var openGalleryLauncher: ActivityResultLauncher<Intent>? = null
 
 
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
@@ -46,16 +51,36 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         binding = ActivityAddPlaceBinding.inflate(layoutInflater)
         setContentView(binding?.root)
 
+        //toolbar things
         setSupportActionBar(binding?.toolbarAddPlace)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
         binding?.toolbarAddPlace?.setNavigationOnClickListener {
             onBackPressed()
         }
 
+
+        openGalleryLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK && result.data != null) {
+                    val uri = result.data?.data
+                    binding?.ivPlaceImage?.setImageURI(uri)
+                    setFABImageViewSettings()
+                }
+            }
+
+        openCameraLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK && result.data != null) {
+                    val bitmap = result?.data?.extras!!.get("data") as Bitmap
+                    binding?.ivPlaceImage?.setImageBitmap(bitmap)
+                    setFABImageViewSettings()
+                }
+            }
+
+
         binding?.etDate?.setOnClickListener(this)
 
-        dateSetListener = DatePickerDialog.OnDateSetListener { view, year, month, dayOfMonth ->
+        dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             cal.set(Calendar.YEAR, year)
             cal.set(Calendar.MONTH, month)
             cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
@@ -63,12 +88,38 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         binding?.tvAddImage?.setOnClickListener {
-            selectImage()
+            selectImageAlertDialog()
+
+        }
+
+        binding?.fabCancelImage?.setOnClickListener {
+            if (binding?.ivPlaceImage?.drawable != null) {
+                binding?.ivPlaceImage?.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        this,
+                        R.drawable.add_screen_image_placeholder
+                    )
+                )
+            }
+
+            binding?.fabCancelImage?.visibility = View.INVISIBLE
         }
 
     }
 
-    private fun selectImage() {
+    private fun setFABImageViewSettings() {
+        if (binding?.ivPlaceImage?.drawable?.constantState != ContextCompat.getDrawable(
+                this,
+                R.drawable.add_screen_image_placeholder
+            )?.constantState
+        ) {
+            binding?.fabCancelImage?.visibility = View.VISIBLE
+        } else {
+            binding?.fabCancelImage?.visibility = View.INVISIBLE
+        }
+    }
+
+    private fun selectImageAlertDialog() {
         val builder = AlertDialog.Builder(this)
 
         builder.setTitle("Select action")
@@ -77,11 +128,23 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         builder.setItems(pictureDialogItems) { _, which ->
             when (which) {
                 0 -> choosePhotoFromGallery()
-                1 -> TODO()
+                1 -> choosePhotoFromCamera()
             }
         }
-
         builder.create().show()
+    }
+
+    private fun choosePhotoFromCamera() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_DENIED
+        ) {
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        } else {
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            openCameraLauncher?.launch(cameraIntent)
+        }
     }
 
     private fun showRationaleDialog(title: String, message: String) {
@@ -117,10 +180,11 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 ) == PackageManager.PERMISSION_DENIED
             ) {
                 readPermissions.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-            }else{
-
+            } else {
+                val galleryIntent =
+                    Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                openGalleryLauncher?.launch(galleryIntent)
             }
-
         }
     }
 

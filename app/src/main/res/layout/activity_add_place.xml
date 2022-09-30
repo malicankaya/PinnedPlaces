@@ -84,10 +84,10 @@
                     android:id="@+id/et_date"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/edit_text_hint_date"
-                    android:inputType="text"
                     android:focusable="false"
                     android:focusableInTouchMode="false"
+                    android:hint="@string/edit_text_hint_date"
+                    android:inputType="text"
                     android:textColor="@color/primary_text_color"
                     android:textColorHint="@color/secondary_text_color"
                     android:textSize="@dimen/edit_text_text_size" />
@@ -114,19 +114,40 @@
                     android:textSize="@dimen/edit_text_text_size" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/iv_place_image"
+            <FrameLayout
+                android:id="@+id/flImageView"
                 android:layout_width="@dimen/add_screen_place_image_size"
                 android:layout_height="@dimen/add_screen_place_image_size"
                 android:layout_marginTop="@dimen/add_screen_place_image_marginTop"
-                android:background="@drawable/shape_image_view_border"
-                android:padding="@dimen/add_screen_place_image_padding"
-                android:scaleType="centerCrop"
-                android:src="@drawable/add_screen_image_placeholder"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/til_location" />
+                app:layout_constraintTop_toBottomOf="@+id/til_location">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:visibility="invisible"
+                    android:id="@+id/fabCancelImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:fabCustomSize="30dp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="5dp"
+                    android:backgroundTint="#EBEBEB"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/ic_remove_24"
+                    android:tint="@color/white" />
+
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/iv_place_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/shape_image_view_border"
+                    android:padding="@dimen/add_screen_place_image_padding"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/add_screen_image_placeholder" />
+            </FrameLayout>
+
 
             <TextView
                 android:id="@+id/tv_add_image"
@@ -140,9 +161,9 @@
                 android:textColor="@color/colorPrimary"
                 android:textSize="@dimen/add_screen_text_add_image_textSize"
                 android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/til_location"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_place_image"/>
+                app:layout_constraintStart_toEndOf="@id/flImageView"
+                app:layout_constraintTop_toBottomOf="@id/til_location" />
 
             <Button
                 android:id="@+id/btn_save"
@@ -159,7 +180,7 @@
                 android:textSize="@dimen/btn_text_size"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/iv_place_image" />
+                app:layout_constraintTop_toBottomOf="@+id/flImageView" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
