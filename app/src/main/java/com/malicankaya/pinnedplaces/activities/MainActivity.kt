@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.lifecycleScope
-import com.malicankaya.pinnedplaces.PlaceAdapter
+import com.malicankaya.pinnedplaces.adapters.PlaceAdapter
 import com.malicankaya.pinnedplaces.database.PlaceApp
 import com.malicankaya.pinnedplaces.database.PlaceDao
 import com.malicankaya.pinnedplaces.databinding.ActivityMainBinding
@@ -40,7 +40,9 @@ class MainActivity : AppCompatActivity() {
             binding?.tvNoRecordsAvailable?.visibility = View.INVISIBLE
 
 
-            binding?.rvPlacesList?.adapter = PlaceAdapter(placesList!!)
+            binding?.rvPlacesList?.adapter = PlaceAdapter(placesList!!,{
+                openDetailsActivity(it)
+            })
         }
     }
 
@@ -53,6 +55,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun openDetailsActivity(id: Int){
+        val intent = Intent(this, PlaceDetailsActivity::class.java)
+        intent.putExtra("placeID",id)
+        startActivity(intent)
     }
 
     override fun onDestroy() {

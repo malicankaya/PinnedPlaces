@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -21,14 +20,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.lifecycleScope
-import com.malicankaya.pinnedplaces.PlaceAdapter
 import com.malicankaya.pinnedplaces.R
 import com.malicankaya.pinnedplaces.database.PlaceApp
 import com.malicankaya.pinnedplaces.database.PlaceDao
 import com.malicankaya.pinnedplaces.databinding.ActivityAddPlaceBinding
 import com.malicankaya.pinnedplaces.models.PlaceEntity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.*
@@ -289,6 +286,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+
     override fun onClick(v: View?) {
         when (v!!.id) {
             R.id.et_date -> {
@@ -311,6 +309,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                             R.drawable.add_screen_image_placeholder
                         )
                     )
+                    image= ""
                 }
                 binding?.fabCancelImage?.visibility = View.INVISIBLE
             }
@@ -319,7 +318,6 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             }
         }
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
