@@ -21,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.lifecycleScope
+import com.malicankaya.pinnedplaces.PlaceAdapter
 import com.malicankaya.pinnedplaces.R
 import com.malicankaya.pinnedplaces.database.PlaceApp
 import com.malicankaya.pinnedplaces.database.PlaceDao
@@ -71,6 +72,9 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         //toolbar things
         setSupportActionBar(binding?.toolbarAddPlace)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        //database things
+        placeDao = (application as PlaceApp).db.placeDao()
+
         //imageLaunchers
         openGalleryLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -110,21 +114,9 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
             setDateEditText()
         }
-        //database things
-        placeDao = (application as PlaceApp).db.placeDao()
-        getAllPlaces()
+
     }
 
-    private fun getAllPlaces() {
-        if (placesList!!.isEmpty()) {
-            lifecycleScope.launch {
-                placeDao?.getAllPlaces()?.collect() {
-                    //TODO create recyclerview adapter and assign to recyclerview
-                    placesList = ArrayList(it)
-                }
-            }
-        }
-    }
 
     private fun setFABImageViewSettings() {
         if (binding?.ivPlaceImage?.drawable?.constantState != ContextCompat.getDrawable(
@@ -246,23 +238,21 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private fun addRecord() {
         val title = binding?.etTitle?.text.toString()
         val description = binding?.etDescription?.text.toString()
-        if (title.isNullOrEmpty() && description.isNullOrEmpty()) {
+        val date = binding?.etDate?.text.toString()
+        val location = binding?.etLocation?.text.toString()
+
+        if (title.isNullOrEmpty()
+            || description.isNullOrEmpty()
+            || date.isNullOrEmpty()
+            || location.isNullOrEmpty()
+            || image.isNullOrEmpty()
+        ) {
             Toast.makeText(
                 applicationContext,
-                "Title and description must be filled.",
+                "All fields must be filled.",
                 Toast.LENGTH_SHORT
             ).show()
         } else {
-            val date = if (binding?.etDate?.text.toString()
-                    .isNullOrEmpty()
-            ) ""
-            else binding?.etDate?.text.toString()
-
-            val location = if (binding?.etLocation?.text.toString()
-                    .isNullOrEmpty()
-            ) ""
-            else binding?.etLocation?.text.toString()
-
             val place = PlaceEntity(
                 title = title,
                 image = image,

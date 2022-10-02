@@ -13,8 +13,8 @@ interface PlaceDao {
     @Delete
     suspend fun delete(placeEntity: PlaceEntity)
 
-    @Query("select * from `pinnedplacestable`")
+    @Query("select * from pinnedplacestable")
     fun getAllPlaces():Flow<List<PlaceEntity>>
-    @Query("select * from `pinnedplacestable` where id=:id")
+    @Query("select * from pinnedplacestable where id=:id")
     fun getPlaceById(id: Int): Flow<PlaceEntity>
 }

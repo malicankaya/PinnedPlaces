@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.malicankaya.pinnedplaces.databinding.ItemPlaceBinding
 import com.malicankaya.pinnedplaces.models.PlaceEntity
 
-class PlaceAdapter(private val placeList: List<PlaceEntity>):RecyclerView.Adapter<PlaceAdapter.ViewHolder>() {
+class PlaceAdapter(private val placeList: ArrayList<PlaceEntity>):RecyclerView.Adapter<PlaceAdapter.ViewHolder>() {
 
     class ViewHolder(val itemBinding: ItemPlaceBinding): RecyclerView.ViewHolder(itemBinding.root)
 
