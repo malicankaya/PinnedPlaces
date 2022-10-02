@@ -1,4 +1,4 @@
-package com.malicankaya.pinnedplaces
+package com.malicankaya.pinnedplaces.activities
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity

@@ -1,8 +1,9 @@
-package com.malicankaya.pinnedplaces
+package com.malicankaya.pinnedplaces.activities
 
 import android.Manifest
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -10,22 +11,36 @@ import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.lifecycleScope
+import com.malicankaya.pinnedplaces.R
+import com.malicankaya.pinnedplaces.database.PlaceApp
+import com.malicankaya.pinnedplaces.database.PlaceDao
 import com.malicankaya.pinnedplaces.databinding.ActivityAddPlaceBinding
-import java.security.Permission
+import com.malicankaya.pinnedplaces.models.PlaceEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 
 class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var binding: ActivityAddPlaceBinding? = null
     private var cal = Calendar.getInstance()
+    private var latitude: Double = 0.0
+    private var longitude: Double = 0.0
+    private var placeDao: PlaceDao? = null
+    private var image: String = ""
+    private var customDialog: Dialog? = null
 
     private var cameraPermission: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -50,35 +65,38 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         binding = ActivityAddPlaceBinding.inflate(layoutInflater)
         setContentView(binding?.root)
-
         //toolbar things
         setSupportActionBar(binding?.toolbarAddPlace)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        binding?.toolbarAddPlace?.setNavigationOnClickListener {
-            onBackPressed()
-        }
-
-
+        //imageLaunchers
         openGalleryLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK && result.data != null) {
                     val uri = result.data?.data
                     binding?.ivPlaceImage?.setImageURI(uri)
-                    setFABImageViewSettings()
+
+                    showCustomDialog()
+                    lifecycleScope.launch {
+                        image = saveImageToStorage(binding?.ivPlaceImage?.drawable!!.toBitmap())
+                    }
                 }
             }
-
         openCameraLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK && result.data != null) {
                     val bitmap = result?.data?.extras!!.get("data") as Bitmap
                     binding?.ivPlaceImage?.setImageBitmap(bitmap)
-                    setFABImageViewSettings()
+
+                    lifecycleScope.launch {
+                        image = saveImageToStorage(binding?.ivPlaceImage?.drawable!!.toBitmap())
+                    }
                 }
             }
-
-
+        //bindings
         binding?.etDate?.setOnClickListener(this)
+        binding?.tvAddImage?.setOnClickListener(this)
+        binding?.fabCancelImage?.setOnClickListener(this)
+        binding?.btnSave?.setOnClickListener(this)
 
         dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             cal.set(Calendar.YEAR, year)
@@ -86,25 +104,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
             setDateEditText()
         }
-
-        binding?.tvAddImage?.setOnClickListener {
-            selectImageAlertDialog()
-
-        }
-
-        binding?.fabCancelImage?.setOnClickListener {
-            if (binding?.ivPlaceImage?.drawable != null) {
-                binding?.ivPlaceImage?.setImageDrawable(
-                    ContextCompat.getDrawable(
-                        this,
-                        R.drawable.add_screen_image_placeholder
-                    )
-                )
-            }
-
-            binding?.fabCancelImage?.visibility = View.INVISIBLE
-        }
-
+        placeDao = (application as PlaceApp).db.placeDao()
     }
 
     private fun setFABImageViewSettings() {
@@ -117,6 +117,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         } else {
             binding?.fabCancelImage?.visibility = View.INVISIBLE
         }
+
     }
 
     private fun selectImageAlertDialog() {
@@ -195,8 +196,89 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         binding?.etDate?.setText(sdf.format(cal.time).toString())
     }
 
+    private suspend fun saveImageToStorage(bitmap: Bitmap): String {
+        var result = ""
+        setFABImageViewSettings()
+        withContext(Dispatchers.IO) {
+            val file = File(
+                externalCacheDir?.absolutePath.toString(),
+                "" + UUID.randomUUID() + ".jpg"
+            )
+
+            try {
+                val stream = FileOutputStream(file)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                stream.flush()
+                stream.close()
+
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+
+            result = file.absolutePath
+
+            runOnUiThread {
+                dismissCustomDialog()
+            }
+        }
+        return result
+    }
+
+    private fun addRecord() {
+        val title = binding?.etTitle?.text.toString()
+        val description = binding?.etDescription?.text.toString()
+        val date = if (binding?.etDate?.text.toString()
+                .isNullOrEmpty()
+        ) ""
+        else binding?.etDate?.text.toString()
+
+        val location = if (binding?.etLocation?.text.toString()
+                .isNullOrEmpty()
+        ) ""
+        else binding?.etLocation?.text.toString()
+
+        val place = PlaceEntity(
+            title = title,
+            image = image,
+            description = description,
+            date = date,
+            location = location,
+            latitude = latitude,
+            longitude = longitude
+        )
+        if (title.isNullOrEmpty() && description.isNullOrEmpty()) {
+            Toast.makeText(
+                applicationContext,
+                "Title and description must be filled.",
+                Toast.LENGTH_SHORT
+            ).show()
+        } else {
+
+        }
+
+
+    }
+
+    private fun showCustomDialog(){
+        customDialog = Dialog(this)
+
+        customDialog?.setContentView(R.layout.dialog_custom_progress)
+
+        customDialog?.show()
+    }
+
+    private fun dismissCustomDialog(){
+        if (customDialog != null) {
+            customDialog?.dismiss()
+            customDialog = null
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v!!.id) {
+            R.id.toolbarAddPlace -> {
+                onBackPressed()
+            }
             R.id.et_date -> {
                 DatePickerDialog(
                     this,
@@ -206,13 +288,29 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     cal.get(Calendar.DAY_OF_MONTH)
                 ).show()
             }
+            R.id.tv_add_image -> {
+                selectImageAlertDialog()
+            }
+            R.id.fabCancelImage -> {
+                if (binding?.ivPlaceImage?.drawable != null) {
+                    binding?.ivPlaceImage?.setImageDrawable(
+                        ContextCompat.getDrawable(
+                            this,
+                            R.drawable.add_screen_image_placeholder
+                        )
+                    )
+                }
+                binding?.fabCancelImage?.visibility = View.INVISIBLE
+            }
+            R.id.btn_save -> {
+                addRecord()
+            }
         }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
         binding = null
     }
-
-
 }

@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -36,6 +37,12 @@ android {
 }
 
 dependencies {
+
+    //room things
+    implementation 'androidx.room:room-runtime:2.4.3'
+    kapt 'androidx.room:room-compiler:2.4.3'
+    implementation 'androidx.room:room-ktx:2.4.3'
+    implementation 'androidx.activity:activity-ktx:1.5.1'
 
     implementation fileTree(dir:"libs",include: ["*.jar"])
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.10'
