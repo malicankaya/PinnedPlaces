@@ -27,11 +27,13 @@ import com.malicankaya.pinnedplaces.database.PlaceDao
 import com.malicankaya.pinnedplaces.databinding.ActivityAddPlaceBinding
 import com.malicankaya.pinnedplaces.models.PlaceEntity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var binding: ActivityAddPlaceBinding? = null
@@ -41,6 +43,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var placeDao: PlaceDao? = null
     private var image: String = ""
     private var customDialog: Dialog? = null
+    private var placesList: ArrayList<PlaceEntity>? = null
 
     private var cameraPermission: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -88,7 +91,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     binding?.ivPlaceImage?.setImageBitmap(bitmap)
 
                     lifecycleScope.launch {
-                        image = saveImageToStorage(binding?.ivPlaceImage?.drawable!!.toBitmap())
+                        image = saveImageToStorage(bitmap)
                     }
                 }
             }
@@ -97,6 +100,9 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         binding?.tvAddImage?.setOnClickListener(this)
         binding?.fabCancelImage?.setOnClickListener(this)
         binding?.btnSave?.setOnClickListener(this)
+        binding?.toolbarAddPlace?.setNavigationOnClickListener {
+            onBackPressed()
+        }
 
         dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             cal.set(Calendar.YEAR, year)
@@ -104,7 +110,20 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             cal.set(Calendar.DAY_OF_MONTH, dayOfMonth)
             setDateEditText()
         }
+        //database things
         placeDao = (application as PlaceApp).db.placeDao()
+        getAllPlaces()
+    }
+
+    private fun getAllPlaces() {
+        if (placesList!!.isEmpty()) {
+            lifecycleScope.launch {
+                placeDao?.getAllPlaces()?.collect() {
+                    //TODO create recyclerview adapter and assign to recyclerview
+                    placesList = ArrayList(it)
+                }
+            }
+        }
     }
 
     private fun setFABImageViewSettings() {
@@ -190,7 +209,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun setDateEditText() {
-        val format = "dd.mm.yyyy"
+        val format = "dd.MM.yyyy"
         val sdf = SimpleDateFormat(format, Locale.getDefault())
 
         binding?.etDate?.setText(sdf.format(cal.time).toString())
@@ -227,25 +246,6 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private fun addRecord() {
         val title = binding?.etTitle?.text.toString()
         val description = binding?.etDescription?.text.toString()
-        val date = if (binding?.etDate?.text.toString()
-                .isNullOrEmpty()
-        ) ""
-        else binding?.etDate?.text.toString()
-
-        val location = if (binding?.etLocation?.text.toString()
-                .isNullOrEmpty()
-        ) ""
-        else binding?.etLocation?.text.toString()
-
-        val place = PlaceEntity(
-            title = title,
-            image = image,
-            description = description,
-            date = date,
-            location = location,
-            latitude = latitude,
-            longitude = longitude
-        )
         if (title.isNullOrEmpty() && description.isNullOrEmpty()) {
             Toast.makeText(
                 applicationContext,
@@ -253,13 +253,38 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 Toast.LENGTH_SHORT
             ).show()
         } else {
+            val date = if (binding?.etDate?.text.toString()
+                    .isNullOrEmpty()
+            ) ""
+            else binding?.etDate?.text.toString()
 
+            val location = if (binding?.etLocation?.text.toString()
+                    .isNullOrEmpty()
+            ) ""
+            else binding?.etLocation?.text.toString()
+
+            val place = PlaceEntity(
+                title = title,
+                image = image,
+                description = description,
+                date = date,
+                location = location,
+                latitude = latitude,
+                longitude = longitude
+            )
+            showCustomDialog()
+            lifecycleScope.launch {
+                placeDao?.insert(place)
+                runOnUiThread {
+                    dismissCustomDialog()
+                    Toast.makeText(applicationContext, "Record saved", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
         }
-
-
     }
 
-    private fun showCustomDialog(){
+    private fun showCustomDialog() {
         customDialog = Dialog(this)
 
         customDialog?.setContentView(R.layout.dialog_custom_progress)
@@ -267,7 +292,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         customDialog?.show()
     }
 
-    private fun dismissCustomDialog(){
+    private fun dismissCustomDialog() {
         if (customDialog != null) {
             customDialog?.dismiss()
             customDialog = null
@@ -276,9 +301,6 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(v: View?) {
         when (v!!.id) {
-            R.id.toolbarAddPlace -> {
-                onBackPressed()
-            }
             R.id.et_date -> {
                 DatePickerDialog(
                     this,
