@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/ic_action_add_24.xml" value="0.35444330949948927" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/ic_remove_20.xml" value="0.3277777777777778" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/ic_remove_24.xml" value="0.3277777777777778" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/shape_button_rounded.xml" value="0.35444330949948927" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/shape_image_view_border.xml" value="0.35444330949948927" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/activity_add_place.xml" value="0.5" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/activity_main.xml" value="0.2658514492753623" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/activity_place_details.xml" value="0.26992753623188404" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/dialog_custom_progress.xml" value="0.2749094202898551" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/item_place.xml" value="0.26992753623188404" />
+      </map>
+    </option>
+  </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
