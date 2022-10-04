@@ -50,4 +50,8 @@ class PlaceAdapter(
         activity.startActivity(intent)
         notifyItemChanged(position)
     }
+
+    fun notifyDeleteItem(position: Int):Int{
+        return placeList[position].id
+    }
 }

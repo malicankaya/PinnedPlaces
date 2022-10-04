@@ -12,6 +12,7 @@ import com.malicankaya.pinnedplaces.database.PlaceApp
 import com.malicankaya.pinnedplaces.database.PlaceDao
 import com.malicankaya.pinnedplaces.databinding.ActivityMainBinding
 import com.malicankaya.pinnedplaces.models.PlaceEntity
+import com.malicankaya.pinnedplaces.utils.SwipeToDeleteCallback
 import com.malicankaya.pinnedplaces.utils.SwipeToEditCallback
 import kotlinx.coroutines.launch
 
@@ -41,7 +42,22 @@ class MainActivity : AppCompatActivity() {
         }
         val editItemTouchHelper = ItemTouchHelper(editSwipeHandler)
         editItemTouchHelper.attachToRecyclerView(binding?.rvPlacesList)
+        //swipe to delete things
+        val deleteSwipeHandler = object: SwipeToDeleteCallback(this){
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter = binding?.rvPlacesList?.adapter as PlaceAdapter
+                val deletePlaceID = adapter.notifyDeleteItem(viewHolder.layoutPosition)
+                deletePlace(deletePlaceID)
+            }
+        }
+        val deleteItemTouchHelper = ItemTouchHelper(deleteSwipeHandler)
+        deleteItemTouchHelper.attachToRecyclerView(binding?.rvPlacesList)
+    }
 
+    private fun deletePlace(id: Int) {
+        lifecycleScope.launch {
+            placeDao?.delete(PlaceEntity(id,"","","","","",0.0,0.0))
+        }
     }
 
     private fun setRecyclerView() {
