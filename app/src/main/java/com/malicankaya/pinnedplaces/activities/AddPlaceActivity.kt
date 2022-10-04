@@ -41,7 +41,8 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var placeDao: PlaceDao? = null
     private var image: String = ""
     private var customDialog: Dialog? = null
-    private var placesList: ArrayList<PlaceEntity>? = null
+    //if edit swipe
+    private var placeDetails: PlaceEntity? = null
 
     private var cameraPermission: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -112,6 +113,11 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             setDateEditText()
         }
 
+        //for swipe to edit
+        if(intent.hasExtra("entityPlaceIDFromSwipe")){
+            supportActionBar?.title = "Edit Place"
+            setFieldForEdit(intent.getIntExtra("entityPlaceIDFromSwipe",0))
+        }
     }
 
 
@@ -286,6 +292,20 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    private fun setFieldForEdit(id: Int){
+        val dao = (application as PlaceApp).db.placeDao()
+        var placeDetails: PlaceEntity? = null
+        lifecycleScope.launch {
+            dao.getPlaceById(id).collect{
+                placeDetails = it
+                binding?.etTitle?.setText(placeDetails?.title)
+                binding?.etDescription?.setText(placeDetails?.description)
+                binding?.etDate?.setText(placeDetails?.date)
+                binding?.etLocation?.setText(placeDetails?.location)
+                binding?.ivPlaceImage?.setImageURI(Uri.parse(placeDetails?.image))
+            }
+        }
+    }
 
     override fun onClick(v: View?) {
         when (v!!.id) {

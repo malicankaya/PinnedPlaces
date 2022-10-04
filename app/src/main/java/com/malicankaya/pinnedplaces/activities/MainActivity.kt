@@ -5,11 +5,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.malicankaya.pinnedplaces.adapters.PlaceAdapter
 import com.malicankaya.pinnedplaces.database.PlaceApp
 import com.malicankaya.pinnedplaces.database.PlaceDao
 import com.malicankaya.pinnedplaces.databinding.ActivityMainBinding
 import com.malicankaya.pinnedplaces.models.PlaceEntity
+import com.malicankaya.pinnedplaces.utils.SwipeToEditCallback
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -29,6 +32,16 @@ class MainActivity : AppCompatActivity() {
         placeDao = (application as PlaceApp).db.placeDao()
         getAllPlaces()
 
+        //swipe to edit things
+        val editSwipeHandler = object: SwipeToEditCallback(this){
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter = binding?.rvPlacesList?.adapter as PlaceAdapter
+                adapter.notifyEditItem(this@MainActivity, viewHolder.layoutPosition)
+            }
+        }
+        val editItemTouchHelper = ItemTouchHelper(editSwipeHandler)
+        editItemTouchHelper.attachToRecyclerView(binding?.rvPlacesList)
+
     }
 
     private fun setRecyclerView() {
@@ -40,7 +53,7 @@ class MainActivity : AppCompatActivity() {
             binding?.tvNoRecordsAvailable?.visibility = View.INVISIBLE
 
 
-            binding?.rvPlacesList?.adapter = PlaceAdapter(placesList!!,{
+            binding?.rvPlacesList?.adapter = PlaceAdapter(this,placesList!!,{
                 openDetailsActivity(it)
             })
         }
