@@ -41,8 +41,10 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var placeDao: PlaceDao? = null
     private var image: String = ""
     private var customDialog: Dialog? = null
-    //if edit swipe
-    private var placeDetails: PlaceEntity? = null
+
+    //for swipe
+    private var isItEdit: Boolean = false
+    private var placeEditID: Int = 0
 
     private var cameraPermission: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -114,9 +116,11 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         //for swipe to edit
-        if(intent.hasExtra("entityPlaceIDFromSwipe")){
+        if (intent.hasExtra("entityPlaceIDFromSwipe")) {
+            isItEdit = true
             supportActionBar?.title = "Edit Place"
-            setFieldForEdit(intent.getIntExtra("entityPlaceIDFromSwipe",0))
+            placeEditID = intent.getIntExtra("entityPlaceIDFromSwipe", 0)
+            setFieldsForEdit(placeEditID)
         }
     }
 
@@ -238,17 +242,18 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         return result
     }
 
-    private fun addRecord() {
+    private fun addOrUpdateRecord() {
         val title = binding?.etTitle?.text.toString()
         val description = binding?.etDescription?.text.toString()
         val date = binding?.etDate?.text.toString()
         val location = binding?.etLocation?.text.toString()
+        var place: PlaceEntity? = null
 
-        if (title.isNullOrEmpty()
-            || description.isNullOrEmpty()
-            || date.isNullOrEmpty()
-            || location.isNullOrEmpty()
-            || image.isNullOrEmpty()
+        if (title.isEmpty()
+            || description.isEmpty()
+            || date.isEmpty()
+            || location.isEmpty()
+            || image.isEmpty()
         ) {
             Toast.makeText(
                 applicationContext,
@@ -256,26 +261,51 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 Toast.LENGTH_SHORT
             ).show()
         } else {
-            val place = PlaceEntity(
-                title = title,
-                image = image,
-                description = description,
-                date = date,
-                location = location,
-                latitude = latitude,
-                longitude = longitude
-            )
-            showCustomDialog()
-            lifecycleScope.launch {
-                placeDao?.insert(place)
-                runOnUiThread {
-                    dismissCustomDialog()
-                    Toast.makeText(applicationContext, "Record saved", Toast.LENGTH_SHORT).show()
-                    finish()
+            if (isItEdit) {
+                place = getPlaceForUpdateOrAdd(placeEditID)
+                showCustomDialog()
+                lifecycleScope.launch {
+                    placeDao?.update(place!!)
+                    runOnUiThread {
+                        dismissCustomDialog()
+                        Toast.makeText(applicationContext, "Record updated", Toast.LENGTH_SHORT)
+                            .show()
+                        finish()
+                    }
+                }
+            } else {
+                place = getPlaceForUpdateOrAdd()
+                showCustomDialog()
+                lifecycleScope.launch {
+                    placeDao?.insert(place)
+                    runOnUiThread {
+                        dismissCustomDialog()
+                        Toast.makeText(applicationContext, "Record saved", Toast.LENGTH_SHORT)
+                            .show()
+                        finish()
+                    }
                 }
             }
         }
     }
+
+    private fun getPlaceForUpdateOrAdd(id: Int = 0): PlaceEntity {
+        val title = binding?.etTitle?.text.toString()
+        val description = binding?.etDescription?.text.toString()
+        val date = binding?.etDate?.text.toString()
+        val location = binding?.etLocation?.text.toString()
+        return PlaceEntity(
+            id = id,
+            title = title,
+            image = image,
+            description = description,
+            date = date,
+            location = location,
+            latitude = latitude,
+            longitude = longitude
+        )
+    }
+
 
     private fun showCustomDialog() {
         customDialog = Dialog(this)
@@ -292,17 +322,17 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-    private fun setFieldForEdit(id: Int){
-        val dao = (application as PlaceApp).db.placeDao()
-        var placeDetails: PlaceEntity? = null
+    private fun setFieldsForEdit(id: Int) {
+        var placeDetails: PlaceEntity
         lifecycleScope.launch {
-            dao.getPlaceById(id).collect{
+            placeDao?.getPlaceById(id)?.collect {
                 placeDetails = it
-                binding?.etTitle?.setText(placeDetails?.title)
-                binding?.etDescription?.setText(placeDetails?.description)
-                binding?.etDate?.setText(placeDetails?.date)
-                binding?.etLocation?.setText(placeDetails?.location)
-                binding?.ivPlaceImage?.setImageURI(Uri.parse(placeDetails?.image))
+                binding?.etTitle?.setText(placeDetails.title)
+                binding?.etDescription?.setText(placeDetails.description)
+                binding?.etDate?.setText(placeDetails.date)
+                binding?.etLocation?.setText(placeDetails.location)
+                binding?.ivPlaceImage?.setImageURI(Uri.parse(placeDetails.image))
+                image = placeDetails.image
             }
         }
     }
@@ -329,12 +359,12 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
                             R.drawable.add_screen_image_placeholder
                         )
                     )
-                    image= ""
+                    image = ""
                 }
                 binding?.fabCancelImage?.visibility = View.INVISIBLE
             }
             R.id.btn_save -> {
-                addRecord()
+                addOrUpdateRecord()
             }
         }
     }
