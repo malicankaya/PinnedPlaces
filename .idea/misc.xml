@@ -3,16 +3,8 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/ic_action_add_24.xml" value="0.35444330949948927" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/ic_remove_20.xml" value="0.3277777777777778" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/ic_remove_24.xml" value="0.3277777777777778" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/shape_button_rounded.xml" value="0.35444330949948927" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/drawable/shape_image_view_border.xml" value="0.35444330949948927" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/activity_add_place.xml" value="0.5" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/activity_main.xml" value="0.2658514492753623" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/activity_place_details.xml" value="0.26992753623188404" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/dialog_custom_progress.xml" value="0.2749094202898551" />
-        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/item_place.xml" value="0.26992753623188404" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/dialog_custom_progress.xml" value="0.2694746376811594" />
+        <entry key="..\:/Users/MehmetAliCANKAYA/AndroidStudioProjects/PinnedPlaces/app/src/main/res/layout/fragment_maps.xml" value="0.2694746376811594" />
       </map>
     </option>
   </component>

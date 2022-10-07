@@ -1,6 +1,7 @@
 package com.malicankaya.pinnedplaces.activities
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
@@ -20,6 +21,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.lifecycleScope
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.malicankaya.pinnedplaces.R
 import com.malicankaya.pinnedplaces.database.PlaceApp
 import com.malicankaya.pinnedplaces.database.PlaceDao
@@ -45,6 +50,18 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     //for swipe
     private var isItEdit: Boolean = false
     private var placeEditID: Int = 0
+
+    //maps api things
+    private val mapsResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data: Intent? = result.data
+            val place = Autocomplete.getPlaceFromIntent(data!!)
+
+            binding?.etLocation?.setText(place.address)
+            latitude = place.latLng!!.latitude
+            longitude = place.latLng!!.longitude
+        }
+    }
 
     private var cameraPermission: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -75,6 +92,12 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         //database things
         placeDao = (application as PlaceApp).db.placeDao()
 
+        //maps api things
+        if(!Places.isInitialized()){
+            Places.initialize(this@AddPlaceActivity,
+                resources.getString(R.string.google_maps_api_key))
+        }
+
         //imageLaunchers
         openGalleryLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -104,6 +127,8 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         binding?.tvAddImage?.setOnClickListener(this)
         binding?.fabCancelImage?.setOnClickListener(this)
         binding?.btnSave?.setOnClickListener(this)
+        binding?.etLocation?.setOnClickListener(this)
+
         binding?.toolbarAddPlace?.setNavigationOnClickListener {
             onBackPressed()
         }
@@ -122,6 +147,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             placeEditID = intent.getIntExtra("entityPlaceIDFromSwipe", 0)
             setFieldsForEdit(placeEditID)
         }
+
     }
 
 
@@ -365,6 +391,19 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.btn_save -> {
                 addOrUpdateRecord()
+            }
+            R.id.et_location -> {
+
+                try{
+                    val fields = listOf(Place.Field.ID, Place.Field.NAME,
+                    Place.Field.LAT_LNG, Place.Field.ADDRESS)
+                    val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                        .build(this@AddPlaceActivity)
+                    mapsResultLauncher.launch(intent)
+
+                }catch (e: Exception){
+                    e.printStackTrace()
+                }
             }
         }
     }

@@ -38,8 +38,11 @@ android {
 
 dependencies {
 
+    implementation 'com.google.android.libraries.places:places:2.6.0'
+
     //room things
     implementation 'androidx.room:room-runtime:2.4.3'
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
     kapt 'androidx.room:room-compiler:2.4.3'
     implementation 'androidx.room:room-ktx:2.4.3'
     implementation 'androidx.activity:activity-ktx:1.5.1'
