@@ -11,4 +11,6 @@
     <string name="tv_no_record_available">No places found yet. Please add one.</string>
 
     <string name="google_maps_api_key">AIzaSyCrthrpFl7jUVOgGBlWa_LbC8fa5yvOz9E</string>
+
+    <string name="btn_text_view_on_map">VIEW ON MAP</string>
 </resources>

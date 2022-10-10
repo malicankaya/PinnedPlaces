@@ -1,5 +1,6 @@
 package com.malicankaya.pinnedplaces.activities
 
+import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -16,6 +17,7 @@ class PlaceDetailsActivity : AppCompatActivity() {
     private var binding: ActivityPlaceDetailsBinding? = null
     private var placeID: Int = 0
     private var placeDao: PlaceDao? = null
+    private var place: PlaceEntity? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPlaceDetailsBinding.inflate(layoutInflater)
@@ -27,15 +29,22 @@ class PlaceDetailsActivity : AppCompatActivity() {
             onBackPressed()
         }
 
-        placeID = intent.getIntExtra("placeID",0)
+        placeID = intent.getIntExtra("placeID", 0)
         placeDao = (application as PlaceApp).db.placeDao()
 
         setUpDetails()
+
+        binding?.btnViewOnMap?.setOnClickListener {
+            val intent = Intent(this, MapActivity::class.java)
+            intent.putExtra("latlong", arrayOf(place?.latitude,place?.longitude))
+            startActivity(intent)
+        }
     }
 
-    private fun setUpDetails(){
+    private fun setUpDetails() {
         lifecycleScope.launch {
-            placeDao?.getPlaceById(placeID)?.collect{
+            placeDao?.getPlaceById(placeID)?.collect {
+                place = it
                 runOnUiThread {
                     binding?.toolbarPlaceDetails?.title = it.title
                     binding?.ivPlaceImage?.setImageURI(Uri.parse(it.image))
