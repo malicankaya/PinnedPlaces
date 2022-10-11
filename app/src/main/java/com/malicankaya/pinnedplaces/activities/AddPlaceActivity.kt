@@ -1,6 +1,7 @@
 package com.malicankaya.pinnedplaces.activities
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -9,13 +10,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Looper
 import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -24,6 +28,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.Autocomplete
@@ -39,7 +44,6 @@ import kotlinx.coroutines.withContext
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var binding: ActivityAddPlaceBinding? = null
@@ -49,6 +53,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var placeDao: PlaceDao? = null
     private var image: String = ""
     private var customDialog: Dialog? = null
+    private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
     //for swipe
     private var isItEdit: Boolean = false
@@ -166,8 +171,29 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             setFieldsForEdit(placeEditID)
         }
 
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
     }
 
+    @SuppressLint("MissingPermission")
+    private fun requestNewLocationData(){
+        val mLocationRequest = LocationRequest()
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.interval = 1000
+        mLocationRequest.numUpdates = 1
+
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallBack, Looper.myLooper())
+    }
+
+    private val mLocationCallBack = object: LocationCallback(){
+        override fun onLocationResult(locationResult: LocationResult?) {
+            val mLastLocation: Location = locationResult!!.lastLocation
+            latitude = mLastLocation.latitude
+            longitude = mLastLocation.longitude
+            Log.e("latitude",""+latitude)
+            Log.e("longitude",""+longitude)
+        }
+    }
 
     private fun setFABImageViewSettings() {
         if (binding?.ivPlaceImage?.drawable?.constantState != ContextCompat.getDrawable(
@@ -224,7 +250,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             locationPermissions.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION))
         } else {
-
+            requestNewLocationData()
         }
     }
 
