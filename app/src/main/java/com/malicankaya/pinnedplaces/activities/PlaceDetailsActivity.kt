@@ -36,7 +36,8 @@ class PlaceDetailsActivity : AppCompatActivity() {
 
         binding?.btnViewOnMap?.setOnClickListener {
             val intent = Intent(this, MapActivity::class.java)
-            intent.putExtra("latlong", arrayOf(place?.latitude,place?.longitude))
+            intent.putExtra("title", place?.title)
+            intent.putExtra("latlong", doubleArrayOf(place!!.latitude,place!!.longitude))
             startActivity(intent)
         }
     }
