@@ -5,9 +5,11 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +20,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.lifecycleScope
@@ -52,16 +55,17 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var placeEditID: Int = 0
 
     //maps api things
-    private val mapsResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data: Intent? = result.data
-            val place = Autocomplete.getPlaceFromIntent(data!!)
+    private val mapsResultLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                val place = Autocomplete.getPlaceFromIntent(data!!)
 
-            binding?.etLocation?.setText(place.address)
-            latitude = place.latLng!!.latitude
-            longitude = place.latLng!!.longitude
+                binding?.etLocation?.setText(place.address)
+                latitude = place.latLng!!.latitude
+                longitude = place.latLng!!.longitude
+            }
         }
-    }
 
     private var cameraPermission: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -79,6 +83,17 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
     private var openGalleryLauncher: ActivityResultLauncher<Intent>? = null
 
+    @RequiresApi(Build.VERSION_CODES.N)
+    private var locationPermissions: ActivityResultLauncher<Array<String>> =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            permissions.forEach { (t, u) ->
+                if (!u) {
+                    Toast.makeText(this, "Permission denied for location.", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        }
+
 
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
 
@@ -93,9 +108,11 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         placeDao = (application as PlaceApp).db.placeDao()
 
         //maps api things
-        if(!Places.isInitialized()){
-            Places.initialize(this@AddPlaceActivity,
-                resources.getString(R.string.google_maps_api_key))
+        if (!Places.isInitialized()) {
+            Places.initialize(
+                this@AddPlaceActivity,
+                resources.getString(R.string.google_maps_api_key)
+            )
         }
 
         //imageLaunchers
@@ -128,6 +145,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         binding?.fabCancelImage?.setOnClickListener(this)
         binding?.btnSave?.setOnClickListener(this)
         binding?.etLocation?.setOnClickListener(this)
+        binding?.tvSelectCurrentLocation?.setOnClickListener(this)
 
         binding?.toolbarAddPlace?.setNavigationOnClickListener {
             onBackPressed()
@@ -190,6 +208,30 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             openCameraLauncher?.launch(cameraIntent)
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N)
+    private fun getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_DENIED
+            || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_DENIED
+        ) {
+            locationPermissions.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION))
+        } else {
+
+        }
+    }
+
+    private fun isLocationEnabled(): Boolean{
+        val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     private fun showRationaleDialog(title: String, message: String) {
@@ -363,6 +405,7 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onClick(v: View?) {
         when (v!!.id) {
             R.id.et_date -> {
@@ -394,15 +437,23 @@ class AddPlaceActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.et_location -> {
 
-                try{
-                    val fields = listOf(Place.Field.ID, Place.Field.NAME,
-                    Place.Field.LAT_LNG, Place.Field.ADDRESS)
-                    val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
-                        .build(this@AddPlaceActivity)
+                try {
+                    val fields = listOf(
+                        Place.Field.ID, Place.Field.NAME,
+                        Place.Field.LAT_LNG, Place.Field.ADDRESS
+                    )
+                    val intent =
+                        Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                            .build(this@AddPlaceActivity)
                     mapsResultLauncher.launch(intent)
 
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     e.printStackTrace()
+                }
+            }
+            R.id.tv_select_current_location ->{
+                if(isLocationEnabled()){
+                    getCurrentLocation()
                 }
             }
         }

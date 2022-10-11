@@ -116,6 +116,22 @@
                     android:textSize="@dimen/edit_text_text_size" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <TextView
+                android:id="@+id/tv_select_current_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/add_place_select_current_location_marginTop"
+                android:background="@drawable/shape_image_view_border"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:padding="@dimen/add_place_select_current_location_padding"
+                android:text="@string/add_place_select_current_location_text"
+                android:textColor="@color/colorPrimary"
+                android:textSize="@dimen/add_place_select_current_location_textsize"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/til_location" />
+
             <FrameLayout
                 android:id="@+id/flImageView"
                 android:layout_width="@dimen/add_screen_place_image_size"
@@ -124,7 +140,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/til_location">
+                app:layout_constraintTop_toBottomOf="@+id/tv_select_current_location">
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:visibility="invisible"
@@ -165,7 +181,7 @@
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/flImageView"
-                app:layout_constraintTop_toBottomOf="@id/til_location" />
+                app:layout_constraintTop_toBottomOf="@id/tv_select_current_location" />
 
             <Button
                 android:id="@+id/btn_save"
